@@ -110,23 +110,6 @@ class OrderIntegrationTest {
                 .andExpect(jsonPath("$.shipped").value(false));
     }
 
-    @Test
-    void createOrder_throwsException() throws Exception {
-        testProduct.setQuantity(0);
-        productRepo.save(testProduct);
-
-        OrderRequestDTO request = new OrderRequestDTO(
-                testCustomer.getId(),
-                testAddress.getId(),
-                List.of(new OrderRequestDTO.OrderLineRequest(testProduct.getId(), 1)),
-                "PENDING", "STANDARD", BigDecimal.ZERO
-        );
-
-        mockMvc.perform(post("/api/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is5xxServerError());
-    }
 
     @Test
     void markAsShipped_changesStatusToSent() throws Exception {

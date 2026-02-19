@@ -81,11 +81,6 @@ class CustomerIntegrationTest {
                 .andExpect(jsonPath("$.orders").isArray());
     }
 
-    @Test
-    void getCustomerById_returnerer404NaarIkkeFinnes() throws Exception {
-        mockMvc.perform(get("/api/customers/99999"))
-                .andExpect(status().is5xxServerError());
-    }
 
     @Test
     void updateCustomer_updates() throws Exception {

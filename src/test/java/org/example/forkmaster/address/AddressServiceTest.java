@@ -33,14 +33,14 @@ class AddressServiceTest {
         return new Customer(id, "Frida", "Kahlo", "fridaK@test.no", 12345678L, new ArrayList<>(), new ArrayList<>());
     }
 
-    private Address createAddress(Long id, Customer kunde) {
+    private Address createAddress(Long id, Customer customer) {
         Address a = new Address();
         a.setId(id);
         a.setStreet("Elias Blix´gate 3");
         a.setCity("Oslo");
         a.setPostalCode("0171");
         a.setCountry("Norge");
-        a.setCustomer(kunde);
+        a.setCustomer(customer);
         return a;
     }
 
@@ -53,7 +53,7 @@ class AddressServiceTest {
         List<AddressDTO> result = addressService.getAllAddresses();
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getStreet()).isEqualTo("Storgata 1");
+        assertThat(result.get(0).getStreet()).isEqualTo("Elias Blix´gate 3");
         assertThat(result.get(0).getCustomerId()).isEqualTo(1L);
     }
 
@@ -91,16 +91,16 @@ class AddressServiceTest {
     }
 
     @Test
-    void createAddress_lagrerOgReturnererDTO() {
+    void createAddress_savesAndReturnsDTO() {
         Customer customer = createCustomer(1L);
         Address savedAddr = createAddress(1L, customer);
         when(customerService.findById(1L)).thenReturn(customer);
         when(addressRepo.save(any(Address.class))).thenReturn(savedAddr);
 
-        AddressDTO input = new AddressDTO(null, "Storgata 1", "Oslo", "0150", "Norge", 1L);
+        AddressDTO input = new AddressDTO(null, "Elias Blix´gate 3", "Oslo", "0150", "Norge", 1L);
         AddressDTO result = addressService.createAddress(input);
 
-        assertThat(result.getStreet()).isEqualTo("Storgata 1");
+        assertThat(result.getStreet()).isEqualTo("Elias Blix´gate 3");
         assertThat(result.getCustomerId()).isEqualTo(1L);
         verify(addressRepo).save(any(Address.class));
     }
