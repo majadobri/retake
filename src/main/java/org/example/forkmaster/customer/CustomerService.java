@@ -4,6 +4,7 @@ import org.example.forkmaster.exception.CustomerNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,6 +31,19 @@ public class CustomerService {
                     log.warn("Customer not found with id: {}", id);
                     return new CustomerNotFoundException("Customer not found with id: " + id);
                 });
+    }
+
+    @Transactional
+    public Customer findByIdWithDetails(Long id) {
+        log.info("Finding customer with addresses and orders by id: {}", id);
+        Customer customer = customerRepo.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Customer not found with id: {}", id);
+                    return new CustomerNotFoundException("Customer not found with id: " + id);
+                });
+        customer.getAddresses().size();
+        customer.getOrders().size();
+        return customer;
     }
 
     public Customer saveCustomer(Customer customer) {

@@ -1,5 +1,6 @@
 package org.example.forkmaster.customer;
 
+import org.example.forkmaster.address.AddressDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -30,7 +31,9 @@ public class CustomerController {
                         customer.getFirstName(),
                         customer.getLastName(),
                         customer.getEmail(),
-                        customer.getPhone()
+                        customer.getPhone(),
+                        null,
+                        null
                 ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(customers);
@@ -38,14 +41,25 @@ public class CustomerController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable Long id) {
-        log.info("GET /api/customers/{} - fetching customer", id);
-        Customer customer = customerService.findById(id);
+        log.info("GET /api/customers/{} - fetching customer with details", id);
+        Customer customer = customerService.findByIdWithDetails(id);
+
+        List<AddressDTO> addresses = customer.getAddresses().stream()
+                .map(a -> new AddressDTO(a.getId(), a.getStreet(), a.getCity(), a.getPostalCode(), a.getCountry(), a.getCustomer().getId()))
+                .collect(Collectors.toList());
+
+        List<CustomerResponseDTO.OrderSummary> orders = customer.getOrders().stream()
+                .map(o -> new CustomerResponseDTO.OrderSummary(o.getId(), o.getOrderDate(), o.getTotalPrice(), o.isShipped()))
+                .collect(Collectors.toList());
+
         CustomerResponseDTO dto = new CustomerResponseDTO(
                 customer.getId(),
                 customer.getFirstName(),
                 customer.getLastName(),
                 customer.getEmail(),
-                customer.getPhone()
+                customer.getPhone(),
+                addresses,
+                orders
         );
         return ResponseEntity.ok(dto);
     }
@@ -67,7 +81,9 @@ public class CustomerController {
                 saved.getFirstName(),
                 saved.getLastName(),
                 saved.getEmail(),
-                saved.getPhone()
+                saved.getPhone(),
+                null,
+                null
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
@@ -91,7 +107,9 @@ public class CustomerController {
                 updated.getFirstName(),
                 updated.getLastName(),
                 updated.getEmail(),
-                updated.getPhone()
+                updated.getPhone(),
+                null,
+                null
         );
         return ResponseEntity.ok(result);
     }
@@ -113,9 +131,11 @@ public class CustomerController {
                         customer.getFirstName(),
                         customer.getLastName(),
                         customer.getEmail(),
-                        customer.getPhone()
+                        customer.getPhone(),
+                        null,
+                        null
                 ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(customers);
     }
-}
+};
