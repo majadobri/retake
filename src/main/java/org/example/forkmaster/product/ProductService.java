@@ -20,7 +20,6 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    // --- Interne metoder brukt av andre services ---
 
     public Product findById(Long id) {
         log.info("Finding product by id: {}", id);
@@ -48,8 +47,6 @@ public class ProductService {
         }
         productRepository.save(product);
     }
-
-    // --- DTO-metoder brukt av controlleren ---
 
     public List<ProductDTO> getAllProducts() {
         log.info("Fetching all products");

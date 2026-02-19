@@ -17,7 +17,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-// Unit-test: tester AddressService uten database
 @ExtendWith(MockitoExtension.class)
 class AddressServiceTest {
 
@@ -30,11 +29,11 @@ class AddressServiceTest {
     @InjectMocks
     private AddressService addressService;
 
-    private Customer lagKunde(Long id) {
-        return new Customer(id, "Ola", "Nordmann", "ola@test.no", 12345678L, new ArrayList<>(), new ArrayList<>());
+    private Customer createCustomer(Long id) {
+        return new Customer(id, "Frida", "Kahlo", "fridaK@test.no", 12345678L, new ArrayList<>(), new ArrayList<>());
     }
 
-    private Address lagAdresse(Long id, Customer kunde) {
+    private Address createAddress(Long id, Customer kunde) {
         Address a = new Address();
         a.setId(id);
         a.setStreet("Storgata 1");
@@ -46,32 +45,32 @@ class AddressServiceTest {
     }
 
     @Test
-    void getAllAddresses_returnererListeMedDTOer() {
-        Customer kunde = lagKunde(1L);
-        Address adresse = lagAdresse(1L, kunde);
-        when(addressRepo.findAll()).thenReturn(List.of(adresse));
+    void getAllAddresses_returnsDTOs() {
+        Customer customer = createCustomer(1L);
+        Address address = createAddress(1L, customer);
+        when(addressRepo.findAll()).thenReturn(List.of(address));
 
-        List<AddressDTO> resultat = addressService.getAllAddresses();
+        List<AddressDTO> result = addressService.getAllAddresses();
 
-        assertThat(resultat).hasSize(1);
-        assertThat(resultat.get(0).getStreet()).isEqualTo("Storgata 1");
-        assertThat(resultat.get(0).getCustomerId()).isEqualTo(1L);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStreet()).isEqualTo("Storgata 1");
+        assertThat(result.get(0).getCustomerId()).isEqualTo(1L);
     }
 
     @Test
-    void getAddressById_returnererDTO() {
-        Customer kunde = lagKunde(1L);
-        Address adresse = lagAdresse(1L, kunde);
-        when(addressRepo.findById(1L)).thenReturn(Optional.of(adresse));
+    void getAddressById_returnsDTO() {
+        Customer customer = createCustomer(1L);
+        Address address = createAddress(1L, customer);
+        when(addressRepo.findById(1L)).thenReturn(Optional.of(address));
 
-        AddressDTO resultat = addressService.getAddressById(1L);
+        AddressDTO result = addressService.getAddressById(1L);
 
-        assertThat(resultat.getId()).isEqualTo(1L);
-        assertThat(resultat.getCity()).isEqualTo("Oslo");
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getCity()).isEqualTo("Oslo");
     }
 
     @Test
-    void getAddressById_kastarExceptionNaarIkkeFinnes() {
+    void getAddressById_throwsException_whenAddressNotFound() {
         when(addressRepo.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> addressService.getAddressById(99L))
@@ -80,34 +79,34 @@ class AddressServiceTest {
     }
 
     @Test
-    void getAddressesByCustomerId_returnererListeMedDTOer() {
-        Customer kunde = lagKunde(1L);
-        Address adresse = lagAdresse(1L, kunde);
-        when(addressRepo.findByCustomerId(1L)).thenReturn(List.of(adresse));
+    void getAddressesByCustomerId_returnsListOfDTOs() {
+        Customer customer = createCustomer(1L);
+        Address address = createAddress(1L, customer);
+        when(addressRepo.findByCustomerId(1L)).thenReturn(List.of(address));
 
-        List<AddressDTO> resultat = addressService.getAddressesByCustomerId(1L);
+        List<AddressDTO> result = addressService.getAddressesByCustomerId(1L);
 
-        assertThat(resultat).hasSize(1);
-        assertThat(resultat.get(0).getCustomerId()).isEqualTo(1L);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getCustomerId()).isEqualTo(1L);
     }
 
     @Test
     void createAddress_lagrerOgReturnererDTO() {
-        Customer kunde = lagKunde(1L);
-        Address lagretAdresse = lagAdresse(1L, kunde);
-        when(customerService.findById(1L)).thenReturn(kunde);
-        when(addressRepo.save(any(Address.class))).thenReturn(lagretAdresse);
+        Customer customer = createCustomer(1L);
+        Address savedAddr = createAddress(1L, customer);
+        when(customerService.findById(1L)).thenReturn(customer);
+        when(addressRepo.save(any(Address.class))).thenReturn(savedAddr);
 
         AddressDTO input = new AddressDTO(null, "Storgata 1", "Oslo", "0150", "Norge", 1L);
-        AddressDTO resultat = addressService.createAddress(input);
+        AddressDTO result = addressService.createAddress(input);
 
-        assertThat(resultat.getStreet()).isEqualTo("Storgata 1");
-        assertThat(resultat.getCustomerId()).isEqualTo(1L);
+        assertThat(result.getStreet()).isEqualTo("Storgata 1");
+        assertThat(result.getCustomerId()).isEqualTo(1L);
         verify(addressRepo).save(any(Address.class));
     }
 
     @Test
-    void deleteAddressById_sletter() {
+    void deleteAddressById_deletes() {
         when(addressRepo.existsById(1L)).thenReturn(true);
 
         addressService.deleteAddressById(1L);
@@ -116,7 +115,7 @@ class AddressServiceTest {
     }
 
     @Test
-    void deleteAddressById_kastarExceptionNaarIkkeFinnes() {
+    void deleteAddressById_throwsException_whenAddressNotFound() {
         when(addressRepo.existsById(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> addressService.deleteAddressById(99L))

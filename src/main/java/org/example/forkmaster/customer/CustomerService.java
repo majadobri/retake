@@ -20,8 +20,6 @@ public class CustomerService {
         this.customerRepo = customerRepo;
     }
 
-    // --- Interne metoder brukt av andre services ---
-
     public Customer findById(Long id) {
         log.info("Finding customer by id: {}", id);
         return customerRepo.findById(id)
@@ -41,7 +39,6 @@ public class CustomerService {
         return customerRepo.findCustomersWithMinimumOrders(minOrders);
     }
 
-    // --- DTO-metoder brukt av controlleren ---
 
     public List<CustomerResponseDTO> getAllCustomers() {
         log.info("Fetching all customers");
@@ -55,7 +52,6 @@ public class CustomerService {
         log.info("Fetching customer with details for id: {}", id);
         Customer customer = customerRepo.findById(id)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + id));
-        // Initialiser lazy-lister mens transaksjonen er aktiv
         List<AddressDTO> addresses = customer.getAddresses().stream()
                 .map(a -> new AddressDTO(a.getId(), a.getStreet(), a.getCity(), a.getPostalCode(), a.getCountry(), a.getCustomer().getId()))
                 .collect(Collectors.toList());

@@ -21,8 +21,6 @@ public class AddressService {
         this.customerService = customerService;
     }
 
-    // --- Interne metoder brukt av andre services ---
-
     public Address findById(Long id) {
         log.info("Finding address by id: {}", id);
         return addressRepo.findById(id)
@@ -31,8 +29,6 @@ public class AddressService {
                     return new AddressNotFoundException("Address not found with id: " + id);
                 });
     }
-
-    // --- DTO-metoder brukt av controlleren ---
 
     public List<AddressDTO> getAllAddresses() {
         log.info("Fetching all addresses");

@@ -2,6 +2,7 @@ package org.example.forkmaster.product;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.forkmaster.TestcontainersConfiguration;
+import org.example.forkmaster.order.OrderRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ class ProductIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
+    private OrderRepo orderRepo;
+
+    @Autowired
     private ProductRepo productRepo;
 
     @Autowired
@@ -34,6 +38,7 @@ class ProductIntegrationTest {
 
     @BeforeEach
     void ryddOpp() {
+        orderRepo.deleteAll();
         productRepo.deleteAll();
     }
 

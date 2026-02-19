@@ -24,7 +24,6 @@ import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-// Integrasjonstest: tester ordre-endepunkter mot ekte database
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
@@ -48,48 +47,43 @@ class OrderIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // Testdata som opprettes før hver test
-    private Customer testKunde;
-    private Address testAdresse;
-    private Product testProdukt;
+    private Customer testCustomer;
+    private Address testAddress;
+    private Product testProduct;
 
     @BeforeEach
     void setupTestdata() {
-        // Slett i riktig rekkefølge
         orderRepo.deleteAll();
         addressRepo.deleteAll();
         customerRepo.deleteAll();
         productRepo.deleteAll();
 
-        // Opprett testkunde
-        testKunde = new Customer();
-        testKunde.setFirstName("Test");
-        testKunde.setLastName("Bruker");
-        testKunde.setEmail("test@test.no");
-        testKunde.setPhone(12345678L);
-        testKunde = customerRepo.save(testKunde);
+        testCustomer = new Customer();
+        testCustomer.setFirstName("Test");
+        testCustomer.setLastName("User");
+        testCustomer.setEmail("test@test.no");
+        testCustomer.setPhone(12345678L);
+        testCustomer = customerRepo.save(testCustomer);
 
-        // Opprett testadresse
-        testAdresse = new Address();
-        testAdresse.setStreet("Testgata 1");
-        testAdresse.setCity("Oslo");
-        testAdresse.setPostalCode("0150");
-        testAdresse.setCountry("Norge");
-        testAdresse.setCustomer(testKunde);
-        testAdresse = addressRepo.save(testAdresse);
+        testAddress = new Address();
+        testAddress.setStreet("Teststreet 1");
+        testAddress.setCity("Oslo");
+        testAddress.setPostalCode("0150");
+        testAddress.setCountry("Norge");
+        testAddress.setCustomer(testCustomer);
+        testAddress = addressRepo.save(testAddress);
 
-        // Opprett testprodukt
-        testProdukt = new Product();
-        testProdukt.setProductName("Testprodukt");
-        testProdukt.setDescription("For testing");
-        testProdukt.setPrice(BigDecimal.valueOf(100));
-        testProdukt.setQuantity(20);
-        testProdukt.setStatus(ProductStatus.IN_STOCK);
-        testProdukt = productRepo.save(testProdukt);
+        testProduct = new Product();
+        testProduct.setProductName("Test Product");
+        testProduct.setDescription("For testing");
+        testProduct.setPrice(BigDecimal.valueOf(100));
+        testProduct.setQuantity(20);
+        testProduct.setStatus(ProductStatus.IN_STOCK);
+        testProduct = productRepo.save(testProduct);
     }
 
     @Test
-    void getAllOrders_returnererTomListeNaarIngenOrdrer() throws Exception {
+    void getAllOrders_returnsEmpty() throws Exception {
         mockMvc.perform(get("/api/orders"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -97,11 +91,11 @@ class OrderIntegrationTest {
     }
 
     @Test
-    void createOrder_oppretterOrdreOgReturnerer201() throws Exception {
+    void createOrder_createsOrder() throws Exception {
         OrderRequestDTO request = new OrderRequestDTO(
-                testKunde.getId(),
-                testAdresse.getId(),
-                List.of(new OrderRequestDTO.OrderLineRequest(testProdukt.getId(), 2)),
+                testCustomer.getId(),
+                testAddress.getId(),
+                List.of(new OrderRequestDTO.OrderLineRequest(testProduct.getId(), 2)),
                 "PENDING",
                 "STANDARD",
                 BigDecimal.valueOf(50)
@@ -112,36 +106,34 @@ class OrderIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.customerId").value(testKunde.getId()))
+                .andExpect(jsonPath("$.customerId").value(testCustomer.getId()))
                 .andExpect(jsonPath("$.shipped").value(false));
     }
 
     @Test
-    void createOrder_returnerFeilNaarProduktErUtsolgt() throws Exception {
-        // Sett antall til 0 (utsolgt)
-        testProdukt.setQuantity(0);
-        productRepo.save(testProdukt);
+    void createOrder_throwsException() throws Exception {
+        testProduct.setQuantity(0);
+        productRepo.save(testProduct);
 
         OrderRequestDTO request = new OrderRequestDTO(
-                testKunde.getId(),
-                testAdresse.getId(),
-                List.of(new OrderRequestDTO.OrderLineRequest(testProdukt.getId(), 1)),
+                testCustomer.getId(),
+                testAddress.getId(),
+                List.of(new OrderRequestDTO.OrderLineRequest(testProduct.getId(), 1)),
                 "PENDING", "STANDARD", BigDecimal.ZERO
         );
 
         mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is5xxServerError()); // OutOfStockException
+                .andExpect(status().is5xxServerError());
     }
 
     @Test
-    void markAsShipped_setterOrdreTilSendt() throws Exception {
-        // Opprett en ordre først
+    void markAsShipped_changesStatusToSent() throws Exception {
         OrderRequestDTO request = new OrderRequestDTO(
-                testKunde.getId(),
-                testAdresse.getId(),
-                List.of(new OrderRequestDTO.OrderLineRequest(testProdukt.getId(), 1)),
+                testCustomer.getId(),
+                testAddress.getId(),
+                List.of(new OrderRequestDTO.OrderLineRequest(testProduct.getId(), 1)),
                 "PENDING", "STANDARD", BigDecimal.valueOf(30)
         );
 
@@ -151,21 +143,19 @@ class OrderIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
-        Long ordreId = objectMapper.readTree(response).get("id").asLong();
+        Long orderId = objectMapper.readTree(response).get("id").asLong();
 
-        // Marker som sendt
-        mockMvc.perform(put("/api/orders/" + ordreId + "/ship"))
+        mockMvc.perform(put("/api/orders/" + orderId + "/ship"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.shipped").value(true));
     }
 
     @Test
-    void deleteOrder_sletterOrdren() throws Exception {
-        // Opprett en ordre
+    void deleteOrder_deletesOrder() throws Exception {
         OrderRequestDTO request = new OrderRequestDTO(
-                testKunde.getId(),
-                testAdresse.getId(),
-                List.of(new OrderRequestDTO.OrderLineRequest(testProdukt.getId(), 1)),
+                testCustomer.getId(),
+                testAddress.getId(),
+                List.of(new OrderRequestDTO.OrderLineRequest(testProduct.getId(), 1)),
                 "PENDING", "STANDARD", BigDecimal.ZERO
         );
 
@@ -175,10 +165,9 @@ class OrderIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
-        Long ordreId = objectMapper.readTree(response).get("id").asLong();
+        Long orderId = objectMapper.readTree(response).get("id").asLong();
 
-        // Slett ordren
-        mockMvc.perform(delete("/api/orders/" + ordreId))
+        mockMvc.perform(delete("/api/orders/" + orderId))
                 .andExpect(status().isNoContent());
     }
 }

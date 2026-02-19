@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-// Unit-test: tester OrderService uten database
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
 
@@ -44,49 +43,49 @@ class OrderServiceTest {
     @InjectMocks
     private OrderService orderService;
 
-    private Customer testKunde;
-    private Address testAdresse;
-    private Product testProdukt;
+    private Customer testCustomer;
+    private Address testAddress;
+    private Product testProduct;
 
     @BeforeEach
     void setup() {
-        testKunde = new Customer(1L, "Ola", "Nordmann", "ola@test.no", 12345678L, new ArrayList<>(), new ArrayList<>());
+        testCustomer = new Customer(1L, "Ola", "Nordmann", "ola@test.no", 12345678L, new ArrayList<>(), new ArrayList<>());
 
-        testAdresse = new Address();
-        testAdresse.setId(1L);
-        testAdresse.setStreet("Storgata 1");
-        testAdresse.setCity("Oslo");
-        testAdresse.setPostalCode("0150");
-        testAdresse.setCountry("Norge");
-        testAdresse.setCustomer(testKunde);
+        testAddress = new Address();
+        testAddress.setId(1L);
+        testAddress.setStreet("Storgata 1");
+        testAddress.setCity("Oslo");
+        testAddress.setPostalCode("0150");
+        testAddress.setCountry("Norge");
+        testAddress.setCustomer(testCustomer);
 
-        testProdukt = new Product(1L, "Kaffe", "God kaffe", BigDecimal.valueOf(50), 10, ProductStatus.IN_STOCK);
+        testProduct = new Product(1L, "Kaffe", "God kaffe", BigDecimal.valueOf(50), 10, ProductStatus.IN_STOCK);
     }
 
     @Test
-    void getAllOrders_returnererListeMedDTOer() {
-        Order ordre = lagOrdre(1L);
-        when(orderRepo.findAll()).thenReturn(List.of(ordre));
+    void getAllOrders_returnsListOfDTOs() {
+        Order order = createOrder(1L);
+        when(orderRepo.findAll()).thenReturn(List.of(order));
 
-        List<OrderResponseDTO> resultat = orderService.getAllOrders();
+        List<OrderResponseDTO> result = orderService.getAllOrders();
 
-        assertThat(resultat).hasSize(1);
-        assertThat(resultat.get(0).getId()).isEqualTo(1L);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
     }
 
     @Test
-    void getOrderById_returnererDTO() {
-        Order ordre = lagOrdre(1L);
-        when(orderRepo.findById(1L)).thenReturn(Optional.of(ordre));
+    void getOrderById_returnsDTO() {
+        Order order = createOrder(1L);
+        when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
 
-        OrderResponseDTO resultat = orderService.getOrderById(1L);
+        OrderResponseDTO result = orderService.getOrderById(1L);
 
-        assertThat(resultat.getId()).isEqualTo(1L);
-        assertThat(resultat.getCustomerId()).isEqualTo(1L);
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getCustomerId()).isEqualTo(1L);
     }
 
     @Test
-    void getOrderById_kastarExceptionNaarIkkeFinnes() {
+    void getOrderById_throwsOrderNotFoundException() {
         when(orderRepo.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> orderService.getOrderById(99L))
@@ -94,13 +93,13 @@ class OrderServiceTest {
     }
 
     @Test
-    void createOrder_oppretterOrdreOgReduserLager() {
-        when(customerService.findById(1L)).thenReturn(testKunde);
-        when(addressService.findById(1L)).thenReturn(testAdresse);
-        when(productService.findById(1L)).thenReturn(testProdukt);
+    void createOrder_createsOrderReducesStock() {
+        when(customerService.findById(1L)).thenReturn(testCustomer);
+        when(addressService.findById(1L)).thenReturn(testAddress);
+        when(productService.findById(1L)).thenReturn(testProduct);
 
-        Order lagretOrdre = lagOrdre(1L);
-        when(orderRepo.save(any(Order.class))).thenReturn(lagretOrdre);
+        Order savedOrder = createOrder(1L);
+        when(orderRepo.save(any(Order.class))).thenReturn(savedOrder);
 
         OrderRequestDTO request = new OrderRequestDTO(
                 1L, 1L,
@@ -108,18 +107,18 @@ class OrderServiceTest {
                 "PENDING", "STANDARD", BigDecimal.valueOf(50)
         );
 
-        OrderResponseDTO resultat = orderService.createOrderForCustomer(1L, request);
+        OrderResponseDTO result = orderService.createOrderForCustomer(1L, request);
 
-        assertThat(resultat).isNotNull();
+        assertThat(result).isNotNull();
         verify(productService).reduceQuantity(1L, 2);
     }
 
     @Test
-    void createOrder_kastarExceptionNaarProduktErUtsolgt() {
-        testProdukt.setQuantity(1); // Bare 1 på lager, men vi bestiller 5
-        when(customerService.findById(1L)).thenReturn(testKunde);
-        when(addressService.findById(1L)).thenReturn(testAdresse);
-        when(productService.findById(1L)).thenReturn(testProdukt);
+    void createOrder_throwsExceptionWhenLowStock() {
+        testProduct.setQuantity(1);
+        when(customerService.findById(1L)).thenReturn(testCustomer);
+        when(addressService.findById(1L)).thenReturn(testAddress);
+        when(productService.findById(1L)).thenReturn(testProduct);
 
         OrderRequestDTO request = new OrderRequestDTO(
                 1L, 1L,
@@ -134,19 +133,19 @@ class OrderServiceTest {
     }
 
     @Test
-    void markAsShipped_setterShippedTilTrue() {
-        Order ordre = lagOrdre(1L);
-        assertThat(ordre.isShipped()).isFalse();
-        when(orderRepo.findById(1L)).thenReturn(Optional.of(ordre));
-        when(orderRepo.save(any())).thenReturn(ordre);
+    void markAsShipped_setsShippedToTrue() {
+        Order order = createOrder(1L);
+        assertThat(order.isShipped()).isFalse();
+        when(orderRepo.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepo.save(any())).thenReturn(order);
 
-        OrderResponseDTO resultat = orderService.markAsShipped(1L);
+        OrderResponseDTO result = orderService.markAsShipped(1L);
 
-        assertThat(resultat.isShipped()).isTrue();
+        assertThat(result.isShipped()).isTrue();
     }
 
     @Test
-    void deleteOrder_kastarExceptionNaarIkkeFinnes() {
+    void deleteOrder_throwsOrderNotFoundException() {
         when(orderRepo.existsById(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> orderService.deleteOrder(99L))
@@ -156,29 +155,28 @@ class OrderServiceTest {
     }
 
     @Test
-    void getTotalSold_returnerer0NaarIngenResultat() {
+    void getTotalSold_returns0IfNoResult() {
         when(orderLineRepo.getTotalProductSoldBetweenDates(any(), any(), any())).thenReturn(null);
 
-        Integer resultat = orderService.getTotalProductSoldBetweenDates(
+        Integer result = orderService.getTotalProductSoldBetweenDates(
                 LocalDateTime.now().minusDays(7), LocalDateTime.now(), "Kaffe"
         );
 
-        assertThat(resultat).isEqualTo(0);
+        assertThat(result).isEqualTo(0);
     }
 
-    // Hjelpemetode for å lage en komplett ordre for testing
-    private Order lagOrdre(Long id) {
-        Order ordre = new Order();
-        ordre.setId(id);
-        ordre.setCustomer(testKunde);
-        ordre.setShippingAddress(testAdresse);
-        ordre.setOrderDate(LocalDateTime.now());
-        ordre.setOrderStatus("PENDING");
-        ordre.setOrderType("STANDARD");
-        ordre.setShipped(false);
-        ordre.setShippingCharge(BigDecimal.valueOf(50));
-        ordre.setTotalPrice(BigDecimal.valueOf(150));
-        ordre.setOrderLines(new ArrayList<>());
-        return ordre;
+    private Order createOrder(Long id) {
+        Order order = new Order();
+        order.setId(id);
+        order.setCustomer(testCustomer);
+        order.setShippingAddress(testAddress);
+        order.setOrderDate(LocalDateTime.now());
+        order.setOrderStatus("PENDING");
+        order.setOrderType("STANDARD");
+        order.setShipped(false);
+        order.setShippingCharge(BigDecimal.valueOf(50));
+        order.setTotalPrice(BigDecimal.valueOf(150));
+        order.setOrderLines(new ArrayList<>());
+        return order;
     }
 }
