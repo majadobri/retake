@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: appdb
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: appuser
+    password: pirate
+    url: jdbc:postgresql://localhost:5432/appdb
+  jpa:
+    generate-ddl: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: false
+
