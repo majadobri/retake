@@ -31,19 +31,6 @@ public class CustomerService {
                 });
     }
 
-    @Transactional
-    public Customer findByIdWithDetails(Long id) {
-        log.info("Finding customer with addresses and orders by id: {}", id);
-        Customer customer = customerRepo.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Customer not found with id: {}", id);
-                    return new CustomerNotFoundException("Customer not found with id: " + id);
-                });
-        customer.getAddresses().size();
-        customer.getOrders().size();
-        return customer;
-    }
-
     public Customer saveCustomer(Customer customer) {
         Customer saved = customerRepo.save(customer);
         log.info("Saved customer with id: {}", saved.getId());
@@ -58,7 +45,7 @@ public class CustomerService {
 
     public List<CustomerResponseDTO> getAllCustomers() {
         log.info("Fetching all customers");
-        return findAll().stream()
+        return customerRepo.findAll().stream()
                 .map(c -> new CustomerResponseDTO(c.getId(), c.getFirstName(), c.getLastName(), c.getEmail(), c.getPhone(), null, null))
                 .collect(Collectors.toList());
     }
