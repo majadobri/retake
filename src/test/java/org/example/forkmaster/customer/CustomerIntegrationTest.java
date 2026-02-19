@@ -84,7 +84,7 @@ class CustomerIntegrationTest {
     @Test
     void getCustomerById_returnerer404NaarIkkeFinnes() throws Exception {
         mockMvc.perform(get("/api/customers/99999"))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test

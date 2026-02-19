@@ -125,7 +125,7 @@ class OrderIntegrationTest {
         mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isConflict());
     }
 
     @Test
