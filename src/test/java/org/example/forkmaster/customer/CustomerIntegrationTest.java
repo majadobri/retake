@@ -54,11 +54,11 @@ class CustomerIntegrationTest {
 
     @Test
     void createCustomer() throws Exception {
-        CustomerResponseDTO nyKunde = new CustomerResponseDTO(null, "Frida", "Kahlo", "fridaK@test.no", 12345678L, null, null);
+        CustomerResponseDTO newCustomer = new CustomerResponseDTO(null, "Frida", "Kahlo", "fridaK@test.no", 12345678L, null, null);
 
         mockMvc.perform(post("/api/customers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(nyKunde)))
+                        .content(objectMapper.writeValueAsString(newCustomer)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firstName").value("Frida"))
                 .andExpect(jsonPath("$.lastName").value("Kahlo"))
