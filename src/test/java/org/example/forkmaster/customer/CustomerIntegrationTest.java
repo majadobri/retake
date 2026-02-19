@@ -85,9 +85,9 @@ class CustomerIntegrationTest {
     @Test
     void updateCustomer_updates() throws Exception {
         Customer customer = new Customer();
-        customer.setFirstName("Gammel");
-        customer.setLastName("Navn");
-        customer.setEmail("gammel@test.no");
+        customer.setFirstName("Old");
+        customer.setLastName("Name");
+        customer.setEmail("old@test.no");
         customer.setPhone(11111111L);
         Customer saved = customerRepo.save(customer);
 
