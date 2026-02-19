@@ -38,17 +38,8 @@ public class AddressController {
 
     @PostMapping
     public ResponseEntity<AddressDTO> createAddress(@RequestBody AddressDTO addressDTO) {
-        log.info("POST /api/addresses - creating address: {}, {}", addressDTO.getStreet(), addressDTO.getCity());
-        Address saved = addressService.createAddress(addressDTO);
-        AddressDTO result = new AddressDTO(
-                saved.getId(),
-                saved.getStreet(),
-                saved.getCity(),
-                saved.getPostalCode(),
-                saved.getCountry(),
-                saved.getCustomer().getId()
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        log.info("POST /api/addresses");
+        return ResponseEntity.status(HttpStatus.CREATED).body(addressService.createAddress(addressDTO));
     }
 
     @DeleteMapping("/{id}")
