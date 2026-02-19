@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AddressService {
@@ -20,11 +21,7 @@ public class AddressService {
         this.customerService = customerService;
     }
 
-    public List<Address> findAll() {
-        List<Address> addresses = addressRepo.findAll();
-        log.info("Found {} addresses", addresses.size());
-        return addresses;
-    }
+    // --- Interne metoder brukt av andre services ---
 
     public Address findById(Long id) {
         log.info("Finding address by id: {}", id);
@@ -35,11 +32,37 @@ public class AddressService {
                 });
     }
 
-    public Address saveAddress(Address address) {
-        log.info("Saving address: {}, {}", address.getStreet(), address.getCity());
+    // --- DTO-metoder brukt av controlleren ---
+
+    public List<AddressDTO> getAllAddresses() {
+        log.info("Fetching all addresses");
+        return addressRepo.findAll().stream()
+                .map(a -> new AddressDTO(a.getId(), a.getStreet(), a.getCity(), a.getPostalCode(), a.getCountry(), a.getCustomer().getId()))
+                .collect(Collectors.toList());
+    }
+
+    public AddressDTO getAddressById(Long id) {
+        Address a = findById(id);
+        return new AddressDTO(a.getId(), a.getStreet(), a.getCity(), a.getPostalCode(), a.getCountry(), a.getCustomer().getId());
+    }
+
+    public List<AddressDTO> getAddressesByCustomerId(Long customerId) {
+        log.info("Fetching addresses for customer: {}", customerId);
+        return addressRepo.findByCustomerId(customerId).stream()
+                .map(a -> new AddressDTO(a.getId(), a.getStreet(), a.getCity(), a.getPostalCode(), a.getCountry(), a.getCustomer().getId()))
+                .collect(Collectors.toList());
+    }
+
+    public AddressDTO createAddress(AddressDTO addressDTO) {
+        log.info("Creating address: {}, {}", addressDTO.getStreet(), addressDTO.getCity());
+        Address address = new Address();
+        address.setStreet(addressDTO.getStreet());
+        address.setCity(addressDTO.getCity());
+        address.setPostalCode(addressDTO.getPostalCode());
+        address.setCountry(addressDTO.getCountry());
+        address.setCustomer(customerService.findById(addressDTO.getCustomerId()));
         Address saved = addressRepo.save(address);
-        log.info("Saved address with id: {}", saved.getId());
-        return saved;
+        return new AddressDTO(saved.getId(), saved.getStreet(), saved.getCity(), saved.getPostalCode(), saved.getCountry(), saved.getCustomer().getId());
     }
 
     public void deleteAddressById(Long id) {
@@ -48,21 +71,5 @@ public class AddressService {
             throw new AddressNotFoundException("Address not found with id: " + id);
         }
         addressRepo.deleteById(id);
-    }
-
-    public List<Address> findByCustomerId(Long customerId) {
-        log.info("Finding addresses for customer: {}", customerId);
-        return addressRepo.findByCustomerId(customerId);
-    }
-
-    public Address createAddress(AddressDTO addressDTO) {
-        log.info("Creating address: {}, {}", addressDTO.getStreet(), addressDTO.getCity());
-        Address address = new Address();
-        address.setStreet(addressDTO.getStreet());
-        address.setCity(addressDTO.getCity());
-        address.setPostalCode(addressDTO.getPostalCode());
-        address.setCountry(addressDTO.getCountry());
-        address.setCustomer(customerService.findById(addressDTO.getCustomerId()));
-        return addressRepo.save(address);
     }
 }
