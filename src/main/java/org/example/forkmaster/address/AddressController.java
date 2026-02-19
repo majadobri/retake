@@ -1,6 +1,5 @@
 package org.example.forkmaster.address;
 
-import org.example.forkmaster.customer.CustomerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,11 +15,9 @@ public class AddressController {
 
     private static final Logger log = LoggerFactory.getLogger(AddressController.class);
     private final AddressService addressService;
-    private final CustomerService customerService;
 
-    public AddressController(AddressService addressService, CustomerService customerService) {
+    public AddressController(AddressService addressService) {
         this.addressService = addressService;
-        this.customerService = customerService;
     }
 
     @GetMapping
@@ -75,16 +72,7 @@ public class AddressController {
     @PostMapping
     public ResponseEntity<AddressDTO> createAddress(@RequestBody AddressDTO addressDTO) {
         log.info("POST /api/addresses - creating address: {}, {}", addressDTO.getStreet(), addressDTO.getCity());
-
-        Address address = new Address();
-        address.setStreet(addressDTO.getStreet());
-        address.setCity(addressDTO.getCity());
-        address.setPostalCode(addressDTO.getPostalCode());
-        address.setCountry(addressDTO.getCountry());
-        address.setCustomer(customerService.findById(addressDTO.getCustomerId()));
-
-        Address saved = addressService.saveAddress(address);
-
+        Address saved = addressService.createAddress(addressDTO);
         AddressDTO result = new AddressDTO(
                 saved.getId(),
                 saved.getStreet(),

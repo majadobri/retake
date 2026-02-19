@@ -1,5 +1,6 @@
 package org.example.forkmaster.address;
 
+import org.example.forkmaster.customer.CustomerService;
 import org.example.forkmaster.exception.AddressNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +13,11 @@ public class AddressService {
 
     private static final Logger log = LoggerFactory.getLogger(AddressService.class);
     private final AddressRepo addressRepo;
+    private final CustomerService customerService;
 
-    public AddressService(AddressRepo addressRepo) {
+    public AddressService(AddressRepo addressRepo, CustomerService customerService) {
         this.addressRepo = addressRepo;
+        this.customerService = customerService;
     }
 
     public List<Address> findAll() {
@@ -50,5 +53,16 @@ public class AddressService {
     public List<Address> findByCustomerId(Long customerId) {
         log.info("Finding addresses for customer: {}", customerId);
         return addressRepo.findByCustomerId(customerId);
+    }
+
+    public Address createAddress(AddressDTO addressDTO) {
+        log.info("Creating address: {}, {}", addressDTO.getStreet(), addressDTO.getCity());
+        Address address = new Address();
+        address.setStreet(addressDTO.getStreet());
+        address.setCity(addressDTO.getCity());
+        address.setPostalCode(addressDTO.getPostalCode());
+        address.setCountry(addressDTO.getCountry());
+        address.setCustomer(customerService.findById(addressDTO.getCustomerId()));
+        return addressRepo.save(address);
     }
 }
