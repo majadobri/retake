@@ -8,13 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/customers")
+@Slf4j
 public class CustomerController {
 
-    private static final Logger log = LoggerFactory.getLogger(CustomerController.class);
     private final CustomerService customerService;
 
     public CustomerController(CustomerService customerService) {
@@ -115,10 +114,10 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteCustomer(@PathVariable Long id) {
-        log.info("DELETE /api/customers/{} - deleting customer", id);
+    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
+        log.info("DELETE /api/customers/{}", id);
         customerService.deleteCustomerById(id);
-        return ResponseEntity.ok("Customer deleted successfully");
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/min-orders")

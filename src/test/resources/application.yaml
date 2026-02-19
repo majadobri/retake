@@ -1,0 +1,8 @@
+spring:
+  flyway:
+    enabled: true
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    generate-ddl: false
