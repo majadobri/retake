@@ -50,13 +50,13 @@ class ProductIntegrationTest {
 
     @Test
     void createProduct_creates() throws Exception {
-        ProductDTO newProduct = new ProductDTO(null, "Kaffemaskin", "Lager god kaffe", BigDecimal.valueOf(999), 10, ProductStatus.IN_STOCK);
+        ProductDTO newProduct = new ProductDTO(null, "Knife", "Japanese", BigDecimal.valueOf(999), 10, ProductStatus.IN_STOCK);
 
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newProduct)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.productName").value("Kaffemaskin"))
+                .andExpect(jsonPath("$.productName").value("Knife"))
                 .andExpect(jsonPath("$.quantity").value(10))
                 .andExpect(jsonPath("$.status").value("IN_STOCK"))
                 .andExpect(jsonPath("$.id").isNumber());
@@ -65,8 +65,8 @@ class ProductIntegrationTest {
     @Test
     void getProductById_returnsProduct() throws Exception {
         Product product = new Product();
-        product.setProductName("Toaster");
-        product.setDescription("Lager toast");
+        product.setProductName("Big knife");
+        product.setDescription("Cuts deep");
         product.setPrice(BigDecimal.valueOf(299));
         product.setQuantity(5);
         product.setStatus(ProductStatus.IN_STOCK);
@@ -74,35 +74,35 @@ class ProductIntegrationTest {
 
         mockMvc.perform(get("/api/products/" + saved.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.productName").value("Toaster"))
+                .andExpect(jsonPath("$.productName").value("Big knife"))
                 .andExpect(jsonPath("$.quantity").value(5));
     }
 
     @Test
     void updateProduct_updates() throws Exception {
         Product product = new Product();
-        product.setProductName("Gammelt produkt");
-        product.setDescription("Gammel beskrivelse");
+        product.setProductName("old product");
+        product.setDescription("old description");
         product.setPrice(BigDecimal.valueOf(100));
         product.setQuantity(1);
         product.setStatus(ProductStatus.IN_STOCK);
         Product saved = productRepo.save(product);
 
-        ProductDTO update = new ProductDTO(null, "Nytt produkt", "Ny beskrivelse", BigDecimal.valueOf(200), 5, ProductStatus.IN_STOCK);
+        ProductDTO update = new ProductDTO(null, "New product", "New description", BigDecimal.valueOf(200), 5, ProductStatus.IN_STOCK);
 
         mockMvc.perform(put("/api/products/" + saved.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(update)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.productName").value("Nytt produkt"))
+                .andExpect(jsonPath("$.productName").value("New product"))
                 .andExpect(jsonPath("$.price").value(200));
     }
 
     @Test
     void deleteProduct_deletes() throws Exception {
         Product product = new Product();
-        product.setProductName("Slett meg");
-        product.setDescription("Skal slettes");
+        product.setProductName("Delete me");
+        product.setDescription("To be deleted");
         product.setPrice(BigDecimal.ONE);
         product.setQuantity(1);
         product.setStatus(ProductStatus.IN_STOCK);
@@ -117,16 +117,16 @@ class ProductIntegrationTest {
     @Test
     void getLowStockProducts_returnsLowStock() throws Exception {
         Product low = new Product();
-        low.setProductName("Lite igjen");
-        low.setDescription("Nesten tomt");
+        low.setProductName("Low stock");
+        low.setDescription("Almost empty");
         low.setPrice(BigDecimal.valueOf(50));
         low.setQuantity(2);
         low.setStatus(ProductStatus.LOW_STOCK);
         productRepo.save(low);
 
         Product fullStack = new Product();
-        fullStack.setProductName("Masse igjen");
-        fullStack.setDescription("Fullt lager");
+        fullStack.setProductName("Much left");
+        fullStack.setDescription("Full stock");
         fullStack.setPrice(BigDecimal.valueOf(50));
         fullStack.setQuantity(100);
         fullStack.setStatus(ProductStatus.IN_STOCK);
@@ -135,14 +135,14 @@ class ProductIntegrationTest {
         mockMvc.perform(get("/api/products/low-stock?maxQuantity=5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].productName").value("Lite igjen"));
+                .andExpect(jsonPath("$[0].productName").value("Low stock"));
     }
 
     @Test
     void getProductsByStatus_returnsStatus() throws Exception {
         Product soldOut = new Product();
-        soldOut.setProductName("Utsolgt vare");
-        soldOut.setDescription("Borte");
+        soldOut.setProductName("Sold out");
+        soldOut.setDescription("Gone for ever");
         soldOut.setPrice(BigDecimal.valueOf(10));
         soldOut.setQuantity(0);
         soldOut.setStatus(ProductStatus.OUT_OF_STOCK);

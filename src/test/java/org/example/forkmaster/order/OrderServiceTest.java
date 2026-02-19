@@ -49,7 +49,7 @@ class OrderServiceTest {
 
     @BeforeEach
     void setup() {
-        testCustomer = new Customer(1L, "Ola", "Nordmann", "ola@test.no", 12345678L, new ArrayList<>(), new ArrayList<>());
+        testCustomer = new Customer(1L, "Frank", "Sinatra", "frank@test.no", 12345678L, new ArrayList<>(), new ArrayList<>());
 
         testAddress = new Address();
         testAddress.setId(1L);
@@ -59,7 +59,7 @@ class OrderServiceTest {
         testAddress.setCountry("Norge");
         testAddress.setCustomer(testCustomer);
 
-        testProduct = new Product(1L, "Kaffe", "God kaffe", BigDecimal.valueOf(50), 10, ProductStatus.IN_STOCK);
+        testProduct = new Product(1L, "Teaspoon", "Knife", BigDecimal.valueOf(50), 10, ProductStatus.IN_STOCK);
     }
 
     @Test
@@ -159,7 +159,7 @@ class OrderServiceTest {
         when(orderLineRepo.getTotalProductSoldBetweenDates(any(), any(), any())).thenReturn(null);
 
         Integer result = orderService.getTotalProductSoldBetweenDates(
-                LocalDateTime.now().minusDays(7), LocalDateTime.now(), "Kaffe"
+                LocalDateTime.now().minusDays(7), LocalDateTime.now(), "Teaspoon"
         );
 
         assertThat(result).isEqualTo(0);

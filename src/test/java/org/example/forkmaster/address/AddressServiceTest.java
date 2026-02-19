@@ -97,7 +97,7 @@ class AddressServiceTest {
         when(customerService.findById(1L)).thenReturn(customer);
         when(addressRepo.save(any(Address.class))).thenReturn(savedAddr);
 
-        AddressDTO input = new AddressDTO(null, "Elias Blix´gate 3", "Oslo", "0150", "Norge", 1L);
+        AddressDTO input = new AddressDTO(null, "Elias Blix´gate 3", "Oslo", "0171", "Norge", 1L);
         AddressDTO result = addressService.createAddress(input);
 
         assertThat(result.getStreet()).isEqualTo("Elias Blix´gate 3");
