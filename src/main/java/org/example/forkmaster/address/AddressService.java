@@ -72,4 +72,20 @@ public class AddressService {
         }
         addressRepo.deleteById(id);
     }
+
+    public List<Address> findByCustomerId(Long customerId) {
+        log.info("Finding addresses for customer: {}", customerId);
+        return addressRepo.findByCustomerId(customerId);
+    }
+
+    public Address createAddress(AddressDTO addressDTO) {
+        log.info("Creating address: {}, {}", addressDTO.getStreet(), addressDTO.getCity());
+        Address address = new Address();
+        address.setStreet(addressDTO.getStreet());
+        address.setCity(addressDTO.getCity());
+        address.setPostalCode(addressDTO.getPostalCode());
+        address.setCountry(addressDTO.getCountry());
+        address.setCustomer(customerService.findById(addressDTO.getCustomerId()));
+        return addressRepo.save(address);
+    }
 }

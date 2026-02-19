@@ -31,8 +31,17 @@ public class CustomerService {
                 });
     }
 
-    public List<Customer> findAll() {
-        return customerRepo.findAll();
+    @Transactional
+    public Customer findByIdWithDetails(Long id) {
+        log.info("Finding customer with addresses and orders by id: {}", id);
+        Customer customer = customerRepo.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Customer not found with id: {}", id);
+                    return new CustomerNotFoundException("Customer not found with id: " + id);
+                });
+        customer.getAddresses().size();
+        customer.getOrders().size();
+        return customer;
     }
 
     public Customer saveCustomer(Customer customer) {
