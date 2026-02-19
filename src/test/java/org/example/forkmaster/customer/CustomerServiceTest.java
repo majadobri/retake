@@ -24,8 +24,8 @@ class CustomerServiceTest {
     @InjectMocks
     private CustomerService customerService;
 
-    private Customer createCustomer(Long id, String fornavn, String etternavn) {
-        return new Customer(id, fornavn, etternavn, fornavn.toLowerCase() + "@test.no", 12345678L, new ArrayList<>(), new ArrayList<>());
+    private Customer createCustomer(Long id, String firstName, String surname) {
+        return new Customer(id, firstName, surname, firstName.toLowerCase() + "f@test.no", 12345678L, new ArrayList<>(), new ArrayList<>());
     }
 
     @Test

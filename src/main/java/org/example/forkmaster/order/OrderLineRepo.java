@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 
 @Repository
-public interface OrderLineRepo extends JpaRepository<OrderLine, Long> {
+interface OrderLineRepo extends JpaRepository<OrderLine, Long> {
 
     @Query("""
         SELECT SUM(ol.quantity)

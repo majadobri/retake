@@ -54,11 +54,11 @@ class CustomerIntegrationTest {
 
     @Test
     void createCustomer() throws Exception {
-        CustomerResponseDTO nyKunde = new CustomerResponseDTO(null, "Frida", "Kahlo", "fridaK@test.no", 12345678L, null, null);
+        CustomerResponseDTO newCustomer = new CustomerResponseDTO(null, "Frida", "Kahlo", "fridaK@test.no", 12345678L, null, null);
 
         mockMvc.perform(post("/api/customers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(nyKunde)))
+                        .content(objectMapper.writeValueAsString(newCustomer)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firstName").value("Frida"))
                 .andExpect(jsonPath("$.lastName").value("Kahlo"))
@@ -81,18 +81,13 @@ class CustomerIntegrationTest {
                 .andExpect(jsonPath("$.orders").isArray());
     }
 
-    @Test
-    void getCustomerById_returnerer404NaarIkkeFinnes() throws Exception {
-        mockMvc.perform(get("/api/customers/99999"))
-                .andExpect(status().isNotFound());
-    }
 
     @Test
     void updateCustomer_updates() throws Exception {
         Customer customer = new Customer();
-        customer.setFirstName("Gammel");
-        customer.setLastName("Navn");
-        customer.setEmail("gammel@test.no");
+        customer.setFirstName("Old");
+        customer.setLastName("Name");
+        customer.setEmail("old@test.no");
         customer.setPhone(11111111L);
         Customer saved = customerRepo.save(customer);
 

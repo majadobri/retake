@@ -18,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-// Integrasjonstest: tester alle produkt-endepunkter mot ekte database
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
@@ -28,22 +27,21 @@ class ProductIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private OrderRepo orderRepo;
-
-    @Autowired
     private ProductRepo productRepo;
 
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private OrderRepo orderRepo;
 
     @BeforeEach
-    void ryddOpp() {
+    void clean() {
         orderRepo.deleteAll();
         productRepo.deleteAll();
     }
 
     @Test
-    void getAllProducts_returnererTomListeNaarIngenProdukter() throws Exception {
+    void getAllProducts_returnsEmptyListIfNoStock() throws Exception {
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -51,105 +49,104 @@ class ProductIntegrationTest {
     }
 
     @Test
-    void createProduct_oppretterProduktOgReturnerer201() throws Exception {
-        ProductDTO nyttProdukt = new ProductDTO(null, "Kaffemaskin", "Lager god kaffe", BigDecimal.valueOf(999), 10, ProductStatus.IN_STOCK);
+    void createProduct_creates() throws Exception {
+        ProductDTO newProduct = new ProductDTO(null, "Knife", "Japanese", BigDecimal.valueOf(999), 10, ProductStatus.IN_STOCK);
 
         mockMvc.perform(post("/api/products")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(nyttProdukt)))
+                        .content(objectMapper.writeValueAsString(newProduct)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.productName").value("Kaffemaskin"))
+                .andExpect(jsonPath("$.productName").value("Knife"))
                 .andExpect(jsonPath("$.quantity").value(10))
                 .andExpect(jsonPath("$.status").value("IN_STOCK"))
                 .andExpect(jsonPath("$.id").isNumber());
     }
 
     @Test
-    void getProductById_returnererProduktet() throws Exception {
-        Product produkt = new Product();
-        produkt.setProductName("Toaster");
-        produkt.setDescription("Lager toast");
-        produkt.setPrice(BigDecimal.valueOf(299));
-        produkt.setQuantity(5);
-        produkt.setStatus(ProductStatus.IN_STOCK);
-        Product lagret = productRepo.save(produkt);
+    void getProductById_returnsProduct() throws Exception {
+        Product product = new Product();
+        product.setProductName("Big knife");
+        product.setDescription("Cuts deep");
+        product.setPrice(BigDecimal.valueOf(299));
+        product.setQuantity(5);
+        product.setStatus(ProductStatus.IN_STOCK);
+        Product saved = productRepo.save(product);
 
-        mockMvc.perform(get("/api/products/" + lagret.getId()))
+        mockMvc.perform(get("/api/products/" + saved.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.productName").value("Toaster"))
+                .andExpect(jsonPath("$.productName").value("Big knife"))
                 .andExpect(jsonPath("$.quantity").value(5));
     }
 
     @Test
-    void updateProduct_oppdatererProduktet() throws Exception {
-        Product produkt = new Product();
-        produkt.setProductName("Gammelt produkt");
-        produkt.setDescription("Gammel beskrivelse");
-        produkt.setPrice(BigDecimal.valueOf(100));
-        produkt.setQuantity(1);
-        produkt.setStatus(ProductStatus.IN_STOCK);
-        Product lagret = productRepo.save(produkt);
+    void updateProduct_updates() throws Exception {
+        Product product = new Product();
+        product.setProductName("old product");
+        product.setDescription("old description");
+        product.setPrice(BigDecimal.valueOf(100));
+        product.setQuantity(1);
+        product.setStatus(ProductStatus.IN_STOCK);
+        Product saved = productRepo.save(product);
 
-        ProductDTO oppdatering = new ProductDTO(null, "Nytt produkt", "Ny beskrivelse", BigDecimal.valueOf(200), 5, ProductStatus.IN_STOCK);
+        ProductDTO update = new ProductDTO(null, "New product", "New description", BigDecimal.valueOf(200), 5, ProductStatus.IN_STOCK);
 
-        mockMvc.perform(put("/api/products/" + lagret.getId())
+        mockMvc.perform(put("/api/products/" + saved.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(oppdatering)))
+                        .content(objectMapper.writeValueAsString(update)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.productName").value("Nytt produkt"))
+                .andExpect(jsonPath("$.productName").value("New product"))
                 .andExpect(jsonPath("$.price").value(200));
     }
 
     @Test
-    void deleteProduct_sletterProduktOgReturnerer204() throws Exception {
-        Product produkt = new Product();
-        produkt.setProductName("Slett meg");
-        produkt.setDescription("Skal slettes");
-        produkt.setPrice(BigDecimal.ONE);
-        produkt.setQuantity(1);
-        produkt.setStatus(ProductStatus.IN_STOCK);
-        Product lagret = productRepo.save(produkt);
+    void deleteProduct_deletes() throws Exception {
+        Product product = new Product();
+        product.setProductName("Delete me");
+        product.setDescription("To be deleted");
+        product.setPrice(BigDecimal.ONE);
+        product.setQuantity(1);
+        product.setStatus(ProductStatus.IN_STOCK);
+        Product saved = productRepo.save(product);
 
-        mockMvc.perform(delete("/api/products/" + lagret.getId()))
+        mockMvc.perform(delete("/api/products/" + saved.getId()))
                 .andExpect(status().isNoContent());
 
-        assertThat(productRepo.findById(lagret.getId())).isEmpty();
+        assertThat(productRepo.findById(saved.getId())).isEmpty();
     }
 
     @Test
-    void getLowStockProducts_returnererProduktMedLavtAntall() throws Exception {
-        Product lav = new Product();
-        lav.setProductName("Lite igjen");
-        lav.setDescription("Nesten tomt");
-        lav.setPrice(BigDecimal.valueOf(50));
-        lav.setQuantity(2);
-        lav.setStatus(ProductStatus.LOW_STOCK);
-        productRepo.save(lav);
+    void getLowStockProducts_returnsLowStock() throws Exception {
+        Product low = new Product();
+        low.setProductName("Low stock");
+        low.setDescription("Almost empty");
+        low.setPrice(BigDecimal.valueOf(50));
+        low.setQuantity(2);
+        low.setStatus(ProductStatus.LOW_STOCK);
+        productRepo.save(low);
 
         Product fullStack = new Product();
-        fullStack.setProductName("Masse igjen");
-        fullStack.setDescription("Fullt lager");
+        fullStack.setProductName("Much left");
+        fullStack.setDescription("Full stock");
         fullStack.setPrice(BigDecimal.valueOf(50));
         fullStack.setQuantity(100);
         fullStack.setStatus(ProductStatus.IN_STOCK);
         productRepo.save(fullStack);
 
-        // Hent produkter med antall <= 5
         mockMvc.perform(get("/api/products/low-stock?maxQuantity=5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].productName").value("Lite igjen"));
+                .andExpect(jsonPath("$[0].productName").value("Low stock"));
     }
 
     @Test
-    void getProductsByStatus_returnererProduktMedGittStatus() throws Exception {
-        Product utsolgt = new Product();
-        utsolgt.setProductName("Utsolgt vare");
-        utsolgt.setDescription("Borte");
-        utsolgt.setPrice(BigDecimal.valueOf(10));
-        utsolgt.setQuantity(0);
-        utsolgt.setStatus(ProductStatus.OUT_OF_STOCK);
-        productRepo.save(utsolgt);
+    void getProductsByStatus_returnsStatus() throws Exception {
+        Product soldOut = new Product();
+        soldOut.setProductName("Sold out");
+        soldOut.setDescription("Gone for ever");
+        soldOut.setPrice(BigDecimal.valueOf(10));
+        soldOut.setQuantity(0);
+        soldOut.setStatus(ProductStatus.OUT_OF_STOCK);
+        productRepo.save(soldOut);
 
         mockMvc.perform(get("/api/products/status/OUT_OF_STOCK"))
                 .andExpect(status().isOk())
